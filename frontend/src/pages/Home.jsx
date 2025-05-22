@@ -17,18 +17,21 @@ function Home() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(emailData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process email');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to process email');
       }
 
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      setError(err.message);
+      console.error('Error:', err);
+      setError(err.message || 'An error occurred while processing your email');
     } finally {
       setLoading(false);
     }
