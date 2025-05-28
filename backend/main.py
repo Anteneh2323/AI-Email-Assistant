@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import os
 from dotenv import load_dotenv
 import httpx
@@ -37,10 +37,28 @@ class EmailResponse(BaseModel):
     suggestions: List[str]
     corrections: List[str]
 
+class TemplateCategoryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class TemplateCategoryCreate(TemplateCategoryBase):
+    pass
+
+class TemplateCategory(TemplateCategoryBase):
+    id: int
+    created_at: str
+    updated_at: str
+
+    class Config:
+        orm_mode = True
+
 class TemplateBase(BaseModel):
     name: str
     subject: str
     content: str
+    category_id: Optional[int] = None
+    tags: Optional[str] = None
+    is_public: Optional[int] = 0
 
 class TemplateCreate(TemplateBase):
     pass
@@ -49,6 +67,7 @@ class Template(TemplateBase):
     id: int
     created_at: str
     updated_at: str
+    category: Optional[TemplateCategory] = None
 
     class Config:
         orm_mode = True
@@ -150,6 +169,50 @@ async def process_email(request: EmailRequest):
         print(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Template Category endpoints
+@app.post("/api/categories", response_model=TemplateCategory)
+def create_category(category: TemplateCategoryCreate, db: Session = Depends(get_db)):
+    db_category = models.TemplateCategory(**category.dict())
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+@app.get("/api/categories", response_model=List[TemplateCategory])
+def get_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    categories = db.query(models.TemplateCategory).offset(skip).limit(limit).all()
+    return categories
+
+@app.get("/api/categories/{category_id}", response_model=TemplateCategory)
+def get_category(category_id: int, db: Session = Depends(get_db)):
+    category = db.query(models.TemplateCategory).filter(models.TemplateCategory.id == category_id).first()
+    if category is None:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return category
+
+@app.put("/api/categories/{category_id}", response_model=TemplateCategory)
+def update_category(category_id: int, category: TemplateCategoryCreate, db: Session = Depends(get_db)):
+    db_category = db.query(models.TemplateCategory).filter(models.TemplateCategory.id == category_id).first()
+    if db_category is None:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    for key, value in category.dict().items():
+        setattr(db_category, key, value)
+    
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+@app.delete("/api/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    db_category = db.query(models.TemplateCategory).filter(models.TemplateCategory.id == category_id).first()
+    if db_category is None:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    db.delete(db_category)
+    db.commit()
+    return {"message": "Category deleted successfully"}
+
 # Template endpoints
 @app.post("/api/templates", response_model=Template)
 def create_template(template: TemplateCreate, db: Session = Depends(get_db)):
@@ -160,8 +223,24 @@ def create_template(template: TemplateCreate, db: Session = Depends(get_db)):
     return db_template
 
 @app.get("/api/templates", response_model=List[Template])
-def get_templates(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    templates = db.query(models.EmailTemplate).offset(skip).limit(limit).all()
+def get_templates(
+    skip: int = 0,
+    limit: int = 100,
+    category_id: Optional[int] = None,
+    tag: Optional[str] = None,
+    is_public: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.EmailTemplate)
+    
+    if category_id is not None:
+        query = query.filter(models.EmailTemplate.category_id == category_id)
+    if tag is not None:
+        query = query.filter(models.EmailTemplate.tags.contains(tag))
+    if is_public is not None:
+        query = query.filter(models.EmailTemplate.is_public == is_public)
+    
+    templates = query.offset(skip).limit(limit).all()
     return templates
 
 @app.get("/api/templates/{template_id}", response_model=Template)
