@@ -1,80 +1,82 @@
 # AI Email Assistant
 
-An AI-powered email writing assistant that helps improve your emails with suggestions for tone, grammar, and content.
+An AI-powered email assistant that helps improve your emails by providing suggestions, corrections, and an improved version of your text.
 
 ## Features
 
-- Email content improvement using OpenAI's GPT-3.5
-- Customizable tone (professional, casual, formal)
-- Adjustable email length
-- Grammar and spelling corrections
+- Email content improvement
 - Writing suggestions
+- Grammar and spelling corrections
+- Professional tone enhancement
+
+## Tech Stack
+
+- Frontend: React + Vite
+- Backend: FastAPI (Python)
+- AI: OpenRouter API (Claude 3 Opus)
 
 ## Setup
 
-### Prerequisites
-
-- Python 3.8+
-- Node.js 14+
-- OpenAI API key
-
-### Backend Setup
-
-1. Create a virtual environment:
+1. Clone the repository:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+git clone https://github.com/yourusername/AI-Email-Assistant.git
+cd AI-Email-Assistant
 ```
 
-2. Install dependencies:
+2. Backend Setup:
 ```bash
+cd backend
+python -m venv venv
+source venv/Scripts/activate  # On Windows
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the root directory:
-```
-OPENAI_API_KEY=your_openai_api_key_here
-BACKEND_PORT=8000
-```
-
-4. Start the backend server:
-```bash
-cd backend
-uvicorn main:app --reload
-```
-
-### Frontend Setup
-
-1. Install dependencies:
+3. Frontend Setup:
 ```bash
 cd frontend
 npm install
 ```
 
-2. Start the development server:
-```bash
-npm start
+4. Create a `.env` file in the backend directory:
+```
+OPENROUTER_API_KEY=your_api_key_here
+BACKEND_PORT=8000
+FRONTEND_PORT=5174
 ```
 
-## Usage
+## Running the Application
 
-1. Open your browser and navigate to `http://localhost:3000`
-2. Enter your email content in the text area
-3. Select desired tone and length
-4. Click "Improve Email" to get suggestions and improvements
+1. Start the backend server:
+```bash
+cd backend
+source venv/Scripts/activate  # On Windows
+python main.py
+```
 
-## API Endpoints
+2. Start the frontend development server:
+```bash
+cd frontend
+npm run dev
+```
 
-- `POST /api/process-email`: Process and improve email content
-  - Request body:
-    ```json
-    {
-      "content": "Your email content",
-      "tone": "professional|casual|formal",
-      "length": "short|medium|long"
-    }
-    ```
+3. Open your browser and navigate to `http://localhost:5173`
+
+## Environment Variables
+
+Create a `.env` file in the backend directory with the following variables:
+
+- `OPENROUTER_API_KEY`: Your OpenRouter API key
+- `BACKEND_PORT`: Port for the backend server (default: 8000)
+- `FRONTEND_PORT`: Port for the frontend server (default: 5174)
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.

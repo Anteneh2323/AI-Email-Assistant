@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Box, Typography, Paper, TextField, Button, CircularProgress, Alert } from '@mui/material';
 import EmailForm from '../components/EmailForm';
 import EmailResult from '../components/EmailResult';
+import EmailTemplates from '../components/EmailTemplates';
 
-function Home() {
+const Home = () => {
+  const [email, setEmail] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const handleSubmit = async (emailData) => {
     setLoading(true);
@@ -19,11 +22,11 @@ function Home() {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(emailData),
+        body: JSON.stringify({ content: emailData.content }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to process email');
       }
 
@@ -37,28 +40,58 @@ function Home() {
     }
   };
 
+  const handleTemplateSelect = (template) => {
+    setEmail(template.content);
+    setShowTemplates(false);
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom align="center">
+        <Typography variant="h4" component="h1" gutterBottom align="center">
           AI Email Assistant
         </Typography>
-        <Typography variant="h6" component="h2" gutterBottom align="center" color="text.secondary">
-          Improve your emails with AI-powered suggestions
-        </Typography>
         
-        <EmailForm onSubmit={handleSubmit} loading={loading} />
-        
-        {error && (
-          <Box sx={{ mt: 2, p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
-            <Typography color="error">{error}</Typography>
-          </Box>
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+          <Button
+            variant="outlined"
+            onClick={() => setShowTemplates(!showTemplates)}
+          >
+            {showTemplates ? 'Hide Templates' : 'Show Templates'}
+          </Button>
+        </Box>
+
+        {showTemplates && (
+          <Paper sx={{ p: 2, mb: 3 }}>
+            <EmailTemplates onSelectTemplate={handleTemplateSelect} />
+          </Paper>
         )}
 
-        {result && <EmailResult result={result} />}
+        <Paper sx={{ p: 3 }}>
+          <EmailForm
+            onSubmit={handleSubmit}
+            loading={loading}
+          />
+
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+              <CircularProgress />
+            </Box>
+          )}
+
+          {result && !loading && (
+            <EmailResult result={result} />
+          )}
+        </Paper>
       </Box>
     </Container>
   );
-}
+};
 
 export default Home; 
