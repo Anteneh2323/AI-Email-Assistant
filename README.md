@@ -77,6 +77,10 @@ Create a `.env` file in the backend directory with the following variables:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+## 🎯 Future Enhancements
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+We are planning to add the following features:
+
+* **Multi-language Support:** Extend analysis and suggestions to other languages.
+* **Custom Tone Profiles:** Allow users to define and save specific communication styles (e.g., formal, casual, persuasive).
+* **Integration with Email Clients:** Develop browser extensions for direct use within popular email services.
